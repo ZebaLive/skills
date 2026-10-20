@@ -1,0 +1,10 @@
+{
+  "name": "review-prs",
+  "version": "1.0.0",
+  "description": "Review one or more GitHub PRs and write one validated review file, sorted by severity, in depthfirst style. Re-reviews only what changed after fixes.",
+  "author": {
+    "name": "ZebaLive"
+  },
+  "repository": "https://github.com/ZebaLive/skills",
+  "keywords": ["code-review", "pull-request", "github"]
+}

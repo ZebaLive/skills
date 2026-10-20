@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "zeba-skills",
+  "description": "ZebaLive's skills for Claude Code and Codex. Each plugin holds one skill.",
+  "owner": {
+    "name": "ZebaLive"
+  },
+  "plugins": [
+    {
+      "name": "review-prs",
+      "description": "Review one or more GitHub PRs and write one validated review file, sorted by severity, in depthfirst style. Re-reviews only what changed after fixes.",
+      "version": "1.0.0",
+      "source": "./plugins/review-prs",
+      "category": "productivity"
+    }
+  ]
+}
