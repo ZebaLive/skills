@@ -102,6 +102,8 @@ Severity follows the consequence, not the size of the fix.
 
 Write to `tmp/review/<slug>.md` in the current working directory. Use `/tmp/pr-review/<slug>.md` outside a git repo. Build the slug from the repos and PR numbers, e.g. `api-94_web-24`. Create the directory if needed.
 
+Keep the file lean. It holds only findings that need action. Never write an empty section, a "None." placeholder, or a section for a PR with no findings. A PR with no findings shows "no findings" in the table and nowhere else.
+
 Use this template exactly:
 
 ```markdown
@@ -110,38 +112,24 @@ Use this template exactly:
 <!-- review-prs: <owner>/<repo>#<n>@<full head sha> <owner>/<repo>#<n>@<full head sha> -->
 
 Reviewed: <date>
-| PR | Title | Head SHA |
-| --- | --- | --- |
-| [<repo>#<n>](<url>) | <title> | `<sha7>` |
 
-## Verdict
+| PR | Head | State | Findings |
+| --- | --- | --- | --- |
+| [<repo>#<n>](<url>) | `<sha7>` | <open / merged / merged, deployed to dev> | <IDs, or "no findings"> |
 
-<One paragraph. Say whether each PR is safe to merge and what blocks it. Give counts: N high, N medium, N low.>
+<Two or three sentences: what blocks a merge, if anything, and the counts (N high, N medium, N low). Omit counts that are zero.>
 
-## Cross-PR findings
+<findings, most severe first: all HIGH, then MEDIUM, then LOW, across every PR>
 
-<Only for two or more PRs. Same finding format as below. Write "None." if there are none.>
+<details>
+<summary>Dropped candidates (N)</summary>
 
-## <repo>#<n>: <title>
+- `<repo>#<n> <file>:<line>`: <claim>. Dropped by <verifier | reviewer>: <reason and the code that shows it>.
 
-### 🔴 HIGH
-
-<findings, or "None.">
-
-### 🟡 MEDIUM
-
-<findings, or "None.">
-
-### ⚪ LOW
-
-<findings, or "None.">
-
-<repeat the section for each PR>
-
-## Dropped candidates
-
-- `<file>:<line>`: <claim>. Dropped by <verifier | reviewer>: <reason and the code that shows it>.
+</details>
 ```
+
+If no finding survives, the file holds the header, the table and one sentence saying every PR is clear. Leave out the dropped-candidates block when it is empty.
 
 ### Finding format
 
@@ -150,7 +138,7 @@ Follow the depthfirst-app style. Each finding:
 ````markdown
 #### <ID> · `<path/to/file.py>:<start>-<end>`
 
-<emoji> **Severity: <LEVEL>**
+<emoji> **Severity: <LEVEL>** · <repo>#<n>[, <repo>#<n> for a cross-PR finding]
 
 <Two to four sentences. Name the input or state that triggers the fault, what the code does, and the consequence. Quote identifiers in backticks. Say "pre-existing" if the PR inherited it.>
 
@@ -175,7 +163,7 @@ Example:
 ````markdown
 #### M1 · `src/billing/refunds.py:88-89`
 
-🟡 **Severity: MEDIUM**
+🟡 **Severity: MEDIUM** · billing-api#94
 
 `refund()` checks `can_refund` against `request.account_id`, which the caller controls, instead of the invoice's account. A support user with refund rights on one account can refund invoices on any account by changing `account_id` in the request body.
 
@@ -203,7 +191,7 @@ Do not post to GitHub. If the user asks you to post, use inline review comments 
 Use this flow when the author pushed fixes after an earlier review. Review only what changed. Do not repeat the full review.
 
 1. Read the earlier review file. Take each PR's old head SHA from the `review-prs` marker and the list of finding IDs.
-2. Run Step 1 for each PR. Fetch the new head SHA. If it equals the old one, tell the user nothing changed and stop.
+2. Run Step 1 for each PR. Fetch the new head SHA. If every head equals the old one, check what can change without a commit before you stop: PR bodies (for findings about the description), merge and deploy state (for ordering findings), and external sources a finding cites. If none of that changed either, tell the user nothing changed and stop.
 3. Get the change since the last review: `git diff "<old>..<new>"` in a clone, or `gh api repos/<o>/<r>/compare/<old>...<new>`. If the author force-pushed and the old SHA is gone, diff the files the findings name, plus the files changed since the base, at the new head. If the range merges the base branch in, limit the diff to files in `gh pr diff`. Changes that came from the base were reviewed elsewhere.
 4. Set a status for each earlier finding:
    - **Fixed**: the failure scenario no longer happens at the new head.
@@ -218,14 +206,12 @@ Use this flow when the author pushed fixes after an earlier review. Review only 
    - **Open**: first grep the new diff for changes to the finding's callers, guards, and validators. A fix can land away from the cited lines. Mark **Open** only if no change touches the failure path.
    - **Obsolete**: set it from the diff alone.
 6. Review the new commits for new faults. Run Step 3 on the change since the last review only, then Steps 4 and 6. New findings take the next free IDs.
-7. Update the same review file:
-   - Update the marker and the head SHA table to the new heads.
-   - Update the `Reviewed:` date.
-   - Add a section above "Verdict": `## Re-review <n>: <date>, <old sha7>..<new sha7>`. It holds only a table with the columns `ID | Finding | Status | Evidence`.
-   - Put new findings in the PR's HIGH, MEDIUM, or LOW section with the next free ID. Add `**Status: New (re-review <n>)**` under each heading.
-   - Add new dropped candidates to "Dropped candidates".
-   - Rewrite the verdict for the new head. Count only findings that are open, partly fixed, or new.
-   - Leave the earlier findings in place. Add `**Status: <status> (re-review <n>)**` under each heading.
+7. Rewrite the same review file in the Step 7 layout, keeping it lean:
+   - Update the marker, the table (heads, state, finding IDs) and the `Reviewed:` date.
+   - Keep only findings that are **Open**, **Partly fixed**, or new, with their original IDs. New findings take the next free ID. Under each heading add `**Status: <Open | Partly fixed | New> (re-review <n>)**` and one line of evidence.
+   - Remove findings that are **Fixed**, **Obsolete**, **Won't fix**, or **Fixed elsewhere**. List them in one line under the summary, e.g. `Resolved since the last review: L1 (fixed), M3 (obsolete).`
+   - Rewrite the summary sentences for the new heads. Count only the findings still in the file.
+   - Add new dropped candidates to the dropped-candidates block.
 8. Report the counts by status, any new findings, and whether anything still blocks the merge.
 
 If the user asks for comments, post only for **Open**, **Partly fixed**, and new findings. Reply in the thread of an existing comment instead of opening a new one.
