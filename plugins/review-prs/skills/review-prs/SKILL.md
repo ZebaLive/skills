@@ -68,9 +68,9 @@ The PR may touch code that was already wrong. Report the fault, but label it **p
 
 ## Step 4: Validate every candidate
 
-Spawn one verifier subagent per candidate. Use `model: "haiku"`. The alias resolves to the newest Haiku. The verifier only checks; you make every decision.
+Spawn one verifier subagent per candidate. Use a **lightweight code-capable** model: a fast, low-cost model that can read code, trace callers and guards, and check a concrete failure scenario. This is a capability class, not a model identifier. Resolve it to an available model in the active provider and model family using the host's supported model selection. Honour an explicit user choice of provider, family, or model. If no suitable lightweight option is available, inherit the current model. The verifier only checks; you make every decision.
 
-Send all verifier calls in one message, in the foreground (`run_in_background: false`). They run in parallel and their replies come back directly. Do not search transcript files for verdicts: the prompt text also contains "VERDICT".
+Use the host's subagent tools to run independent verifiers in parallel where supported, and wait for their replies before acting on the verdicts. Do not search transcript files for verdicts: the prompt text also contains "VERDICT".
 
 Give each verifier the prompt in `references/verifier-prompt.md`, filled in with the candidate. Include the head SHA, the base SHA, and how to read code at each.
 
@@ -200,7 +200,7 @@ Use this flow when the author pushed fixes after an earlier review. Review only 
    - **Obsolete**: the code was removed or rewritten, so the finding no longer applies.
    - **Won't fix**: the author or the user decided to leave it. Quote where they said so.
    - **Fixed elsewhere**: still present at the PR head, but another merged PR fixed it on the base branch. Name that PR.
-5. Validate statuses with Haiku verifiers, using `references/verifier-prompt.md`:
+5. Validate statuses with verifier subagents selected by the model-class rules in Step 4, using `references/verifier-prompt.md`:
    - **Fixed**: claim "finding <ID>'s failure scenario no longer happens at <new sha>". `REFUTED` means **Partly fixed** or **Open**, as the evidence shows.
    - **Partly fixed**: claim "the fix covers <fixed paths>, and <remaining paths> still fail at <new sha>".
    - **Open**: first grep the new diff for changes to the finding's callers, guards, and validators. A fix can land away from the cited lines. Mark **Open** only if no change touches the failure path.

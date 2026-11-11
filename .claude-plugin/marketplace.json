@@ -9,7 +9,7 @@
     {
       "name": "review-prs",
       "description": "Review one or more GitHub PRs and write one validated review file, sorted by severity, in depthfirst style. Re-reviews only what changed after fixes.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "source": "./plugins/review-prs",
       "category": "productivity"
     }
