@@ -1,6 +1,6 @@
 {
   "name": "review-prs",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Review one or more GitHub PRs and write one validated review file, sorted by severity, in depthfirst style. Re-reviews only what changed after fixes.",
   "author": {
     "name": "ZebaLive"
